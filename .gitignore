@@ -1,0 +1,9 @@
+*.yaml
+!config/config.example.yaml
+venv
+.vscode
+__pycache__
+*.xml
+*.csv
+!data/eurofxref-hist.csv
+.DS_Store
