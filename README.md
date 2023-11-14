@@ -36,11 +36,10 @@ The tool is designed to handle dividends paid in USD. Future versions may extend
 
 ## Installation
 
-Provide step-by-step instructions on how to install and set up your project.
 
 ```bash
 # Clone the repository
-git clone https://github.com/your_username/your_project.git
+git clone https://github.com/rmilosic/edavki-xml-converter.git
 
 # Change into the project directory
 cd your_project

@@ -6,4 +6,4 @@ __pycache__
 *.xml
 *.csv
 !data/eurofxref-hist.csv
-.DS_Store
+*.DS_Store
