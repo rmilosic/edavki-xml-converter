@@ -47,6 +47,7 @@ def build_dividend_xml(data, year, config):
     period = etree.SubElement(doh_div, "Period")
     period.text = f"{year}"
     
+    i = 1
     
 
     for _, row in data.iterrows():
@@ -57,7 +58,7 @@ def build_dividend_xml(data, year, config):
         payer_tax_num = etree.SubElement(dividend, "PayerTaxNumber")
         # PayerTaxNumber.text = row[""]
         payer_ident_num = etree.SubElement(dividend, "PayerIdentificationNumber")
-        payer_ident_num.text = f"{(_+1)}"
+        payer_ident_num.text = f"{i}"
         
         payer_name = etree.SubElement(dividend, "PayerName")
         payer_name.text = config["payer_name"]
@@ -82,6 +83,8 @@ def build_dividend_xml(data, year, config):
         
         relief_statement = etree.SubElement(dividend, "ReliefStatement")
         relief_statement.text = config["relief_statement"]
+        
+        i+=1
 
     # corp_data = etree.SubElement(body, "CorpData")
     # corp_data_detail = etree.SubElement(body, "CorpDataDetail")

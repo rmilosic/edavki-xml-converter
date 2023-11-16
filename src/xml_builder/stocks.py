@@ -38,9 +38,9 @@ def build_popisni_list(id, ticker_transactions):
             f2 = etree.SubElement(purchase, "F2")
             f2.text = "B"
             f3 = etree.SubElement(purchase, "F3")
-            f3.text = str(round(row.iloc[6],4))
+            f3.text = str(abs(round(row.iloc[6],4)))
             f4 = etree.SubElement(purchase, "F4")
-            f4.text = str(abs(round(row.iloc[7], 4)))
+            f4.text = str(abs(round(row["transaction_eur"], 4)))
         else:
             purchase = etree.SubElement(row2, "Sale")
             f6 = etree.SubElement(purchase, "F6")
@@ -48,7 +48,7 @@ def build_popisni_list(id, ticker_transactions):
             f7 = etree.SubElement(purchase, "F7")
             f7.text = str(abs(round(row.iloc[6],4)))
             f9 = etree.SubElement(purchase, "F9")
-            f9.text = str(abs(round(row.iloc[7], 4)))
+            f9.text = str(abs(round(row["transaction_eur"], 4)))
             f10 = etree.SubElement(purchase, "F10")
             f10.text = "false"
             

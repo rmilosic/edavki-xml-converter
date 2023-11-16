@@ -2,9 +2,10 @@ import argparse
 import os
 import yaml
 
-from src.parser.dividends import parse_degiro_account_data, parse_historical_currency_data
+from src.parser.dividends import parse_degiro_account_data
 from src.parser.stocks import parse_degiro_transactions_data, get_sold_products, get_historical_ticker_transactions
-from src.transformer import recalculate_column_using_currency_data
+from src.parser.exchange_rate import parse_historical_currency_data
+from src.transformer.dividends import add_eur_column
 from src.xml_builder.dividends import build_dividend_xml
 from src.xml_builder.stocks import build_stock_xml
 
@@ -43,14 +44,10 @@ def process_dividends(args, config):
     # Parse Excel
     degiro_data = parse_degiro_account_data(args.file_path, args.year)
 
-    # Parse historical currency data
-    currency_data = parse_historical_currency_data("eurofxref-hist.csv")
-
     # Recalculate a column in DeGiro account data using currency data
-    recalculated_data = recalculate_column_using_currency_data(degiro_data, currency_data)
 
     # Build XML
-    xml_data = build_dividend_xml(recalculated_data, args.year, config)
+    xml_data = build_dividend_xml(degiro_data, args.year, config)
 
     with open(f"degiro_dividends_doh_div_v3_{args.year}.xml", "w", encoding="utf-8") as file:
         file.write(xml_data)
