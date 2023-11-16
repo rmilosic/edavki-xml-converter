@@ -2,7 +2,7 @@ from lxml import etree
 
 
 
-def build_xml(data, year, config):
+def build_dividend_xml(data, year, config):
     # Define namespaces
     ns_main = "http://edavki.durs.si/Documents/Schemas/Doh_Div_3.xsd"
     ns_edp = "http://edavki.durs.si/Documents/Schemas/EDP-Common-1.xsd"

@@ -9,8 +9,6 @@ current_directory = os.getcwd()
 
 def parse_degiro_account_data(file_path, year):
 
-    
-
     # transform columns
     df = pd.read_csv(os.path.join(current_directory, f"data/{file_path}"),
                      parse_dates=[0,2])
