@@ -18,6 +18,22 @@ def add_eur_column(degiro_data):
 
     return merged_data
 
+
+def add_fifo_data(degiro_data, date):
+    
+    
+    # reinitialize left quantity with initial
+    degiro_data["left"] = degiro_data["Počet"]
+    
+    degiro_data["left_on"] = date
+    
+    # todo, for each position calculate left of order on given date
+    # get sell row indexes, rows
+    # for each sell, filter all previous buys where left >0
+    # 
+    
+    return degiro_data
+
 def recalculate_to_eur(row):
     if row.iloc[8] == 'EUR':
         return row.iloc[7]

@@ -22,19 +22,12 @@ def parse_degiro_transactions_data(file_path, year):
     df.sort_values(by="Datum", inplace=True)
     
     df = add_eur_column(df)
-    # TODO: recalculate Price "Cena" based on currency
-    # df[["Unnamed: 8", "Unnamed: 10"]] = df[["Unnamed: 8", "Unnamed: 10"]].astype("float")
-
-    # Convert specified columns to datetime with the specified format
-    # for col_loc in date_columns:
-    #     df.iloc[:, col_loc] = pd.to_datetime(df.iloc[:, col_loc], format='%d-%m-%Y', dayfirst=True)  
-
+    
     # Filter by year
     if year:
         df = df[df.iloc[:,0].dt.year <= year]
 
     
-    # Return the DataFrame or relevant data based on your requirements
     return df
 
 def get_sold_products(df, year):

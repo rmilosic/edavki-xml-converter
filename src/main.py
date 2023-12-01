@@ -6,6 +6,7 @@ from src.parser.dividends import parse_degiro_account_data
 from src.parser.stocks import parse_degiro_transactions_data, get_sold_products, get_historical_ticker_transactions
 from src.parser.exchange_rate import parse_historical_currency_data
 from src.transformer.dividends import add_eur_column
+from src.transformer.stocks import add_fifo_data
 from src.xml_builder.dividends import build_dividend_xml
 from src.xml_builder.stocks import build_stock_xml
 
@@ -21,20 +22,23 @@ def load_config(filename):
 def main():
     
     parser = argparse.ArgumentParser(description="Parse Excel and build XML.")
-    parser.add_argument('mode', choices=['dividend', 'stock'],
+    parser.add_argument('mode', choices=['dividend', 'stock', 'fifo'],
                         help='Specify the processing mode (dividend or stock).')
     parser.add_argument("file_path", help="Path to the Degiro Account Statement file")
     parser.add_argument("--year", "-y", type=int, help="Year for which the report is")
     parser.add_argument("--config", "-c", type=str, default="config.yaml", help="Path to the configuration file")
-
+    parser.add_argument("--fifo_date", "-d", type=str, default="config.yaml", help="Path to the configuration file")
     args = parser.parse_args()
     
     # Use the selected mode
+    
     config = load_config(args.config)
     if args.mode == 'dividend':
         process_dividends(args, config)
     elif args.mode == 'stock':
         process_stocks(args, config)
+    elif args.mode == "fifo":
+        process_fifo(args, config)
     else:
         print(f"Invalid mode: {args.mode}")
         
@@ -71,5 +75,15 @@ def process_stocks(args, config):
     
     return degiro_data
 
+def process_fifo(args, config):
+    
+    degiro_data = parse_degiro_transactions_data(args.file_path, args.year)
+    
+    degiro_with_fifo = add_fifo_data(degiro_data, args.fifo_date)
+    degiro_with_fifo.to_csv(f"degiro_fifo_{args.fifo_date}.csv", encoding='utf-8')
+    
+    
+    
+    return degiro_data
 if __name__ == "__main__":
     main()

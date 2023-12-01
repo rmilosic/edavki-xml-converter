@@ -46,6 +46,18 @@ def build_dividend_xml(data, year, config):
     doh_div = etree.SubElement(body, "Doh_Div")
     period = etree.SubElement(doh_div, "Period")
     period.text = f"{year}"
+    email_address = etree.SubElement(doh_div, "EmailAddress")
+    email_address.text = config["email_address"]
+    phone_number = etree.SubElement(doh_div, "PhoneNumber")
+    phone_number.text = config["phone_number"]
+    resident_country = etree.SubElement(doh_div, "ResidentCountry")
+    resident_country.text = config["resident_country"]
+    is_resident = etree.SubElement(doh_div, "IsResident")
+    is_resident.text = config["is_resident"]
+    self_report = etree.SubElement(doh_div, "SelfReport")
+    self_report.text = config["self_report"]
+    wf_type_u = etree.SubElement(doh_div, "WfTypeU")
+    wf_type_u.text = config["wf_type_u"]
     
     i = 1
     
@@ -55,7 +67,7 @@ def build_dividend_xml(data, year, config):
         # Add logic to build XML elements based on DataFrame rows
         date = etree.SubElement(dividend, "Date")
         date.text = row['Datum.1'].strftime("%Y-%m-%d")
-        payer_tax_num = etree.SubElement(dividend, "PayerTaxNumber")
+        # payer_tax_num = etree.SubElement(dividend, "PayerTaxNumber")
         # PayerTaxNumber.text = row[""]
         payer_ident_num = etree.SubElement(dividend, "PayerIdentificationNumber")
         payer_ident_num.text = f"{i}"
@@ -81,8 +93,8 @@ def build_dividend_xml(data, year, config):
         source_country = etree.SubElement(dividend, "SourceCountry")
         source_country.text = config["source_country"]
         
-        relief_statement = etree.SubElement(dividend, "ReliefStatement")
-        relief_statement.text = config["relief_statement"]
+        # relief_statement = etree.SubElement(dividend, "ReliefStatement")
+        # relief_statement.text = config["relief_statement"]
         
         i+=1
 
