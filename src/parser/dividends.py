@@ -13,7 +13,7 @@ def parse_degiro_account_data(file_path, year):
 
     # transform columns
     df = pd.read_csv(os.path.join(current_directory, f"data/{file_path}"),
-                     parse_dates=[0,2])
+                     parse_dates=[0,2], date_format="%d-%m-%Y")
     # Convert columns at location 0 and 1 to datetime
     df = df[df.iloc[:,5] == "Dividenda"]
     
