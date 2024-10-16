@@ -16,8 +16,9 @@ def calculate_value(row):
 def parse_degiro_transactions_data(file_path, year):
 
     # transform columns
-    df = pd.read_csv(os.path.join(current_directory, f"data/{file_path}"),
-                     parse_dates=[0])
+    df = pd.read_csv(os.path.join(current_directory, f"data/{file_path}"))
+    df["Datum"] = pd.to_datetime(df["Datum"], dayfirst=True)
+    
     # Convert columns at location 0 and 1 to datetime
     df.sort_values(by="Datum", inplace=True)
     

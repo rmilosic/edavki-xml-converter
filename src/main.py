@@ -10,6 +10,8 @@ from src.transformer.stocks import add_fifo_data
 from src.xml_builder.dividends import build_dividend_xml
 from src.xml_builder.stocks import build_stock_xml
 
+from collections import deque
+import pandas as pd
 
 def load_config(filename):    
     
@@ -75,12 +77,63 @@ def process_stocks(args, config):
     
     return degiro_data
 
+
 def process_fifo(args, config):
+    
+    fifo_queue = deque()
+    
+    
+    # Function to handle buying stocks
+    def buy(quantity, price):
+        fifo_queue.append((quantity, price))
+
+    # Function to handle selling stocks and calculate profit/loss
+    def sell(quantity, sale_price):
+        total_cost = 0
+        sold_quantity = quantity
+        total_proceeds = quantity * sale_price
+        while quantity > 0:
+            oldest_stock = fifo_queue.popleft()
+            available_qty, price = oldest_stock
+            if quantity >= available_qty:
+                total_cost += available_qty * price
+                quantity -= available_qty
+            else:
+                total_cost += quantity * price
+                fifo_queue.appendleft((available_qty - quantity, price))
+                quantity = 0
+                
+        # Calculate profit/loss
+        profit_or_loss = total_proceeds - total_cost
+        return total_cost, total_proceeds, profit_or_loss
+    # FIFO queue to hold purchased stocks
     
     degiro_data = parse_degiro_transactions_data(args.file_path, args.year)
     
-    degiro_with_fifo = add_fifo_data(degiro_data, args.fifo_date)
-    degiro_with_fifo.to_csv(f"degiro_fifo_{args.fifo_date}.csv", encoding='utf-8')
+    # TODO: proces each product separately 
+    for product in degiro_data["Produkt"].drop_duplicates():
+        
+        # datum, produkt, isin, počet, price, fifo cost, proceeds, profit/loss
+        sales_records = []
+        product_data = degiro_data[degiro_data["Produkt"] == product]
+        for index, row in product_data.iterrows():
+            
+            count = row["Počet"]
+            price = row["Cena"]
+            action = "buy" if count > 0 else "sell"
+            if action == 'buy':
+                buy(count, price)
+            elif action == 'sell':
+                total_cost, total_proceeds, profit_or_loss = sell(abs(count), price)
+                sales_records.append((row["Datum"], row["Produkt"], row["ISIN"], row["Počet"], row["Cena"], total_cost, total_proceeds, profit_or_loss))
+                print(f"Sold {count} shares:")
+                print(f"  FIFO Cost: €{total_cost}")
+                print(f"  Proceeds: €{total_proceeds}")
+                print(f"  Profit/Loss: €{profit_or_loss}")
+
+        
+        fifo_sales = pd.DataFrame(columns=["Datum", "Produkt", "ISIN", "Počet", "Cena", "fifo cost", "proceeds", "profit/loss"], data=sales_records)
+        fifo_sales.to_csv(f"degiro_fifo_{product}.csv", encoding='utf-8')
     
     
     
