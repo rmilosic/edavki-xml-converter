@@ -89,6 +89,7 @@ def process_fifo(args, config):
 
     # Function to handle selling stocks and calculate profit/loss
     def sell(quantity, sale_price):
+        #TODO: upgrade to track which buy orders (price, quantity, ID were used for a sale)
         total_cost = 0
         sold_quantity = quantity
         total_proceeds = quantity * sale_price
