@@ -7,14 +7,14 @@ def add_eur_column(degiro_data):
     # Assuming 'ExchangeRate' is the column in historical currency data
 
     currency_data = parse_historical_currency_data("eurofxref-hist.csv")
+    currency_data["Date"] = pd.to_datetime(currency_data["Date"])
     
     # Merge DeGiro data with currency data based on a common column (e.g., 'Date')
-    merged_data = pd.merge_asof(degiro_data, currency_data, left_on='Datum.1', right_on="Date")
+    merged_data = pd.merge_asof(degiro_data, currency_data, left_on='Datum', right_on="Date")
 
     # Recalculate the 'Amount' column using the 'ExchangeRate'
     # merged_data['transaction_eur'] = merged_data['Unnamed: 8'] / merged_data['USD']
     merged_data['transaction_eur'] = merged_data.apply(recalculate_to_eur, axis=1)
-    
     return merged_data
 
 def recalculate_to_eur(row):

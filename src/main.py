@@ -2,11 +2,11 @@ import argparse
 import os
 import yaml
 
-from src.parser.dividends import parse_degiro_account_data
+# from src.parser.dividends import parse_degiro_account_data
 from src.parser.stocks import parse_degiro_transactions_data, get_sold_products, get_historical_ticker_transactions
-from src.parser.exchange_rate import parse_historical_currency_data
-from src.transformer.dividends import add_eur_column
-from src.transformer.stocks import add_fifo_data
+# from src.parser.exchange_rate import parse_historical_currency_data
+# from src.transformer.dividends import add_eur_column
+# from src.transformer.stocks import add_fifo_data
 from src.xml_builder.dividends import build_dividend_xml
 from src.xml_builder.stocks import build_stock_xml
 
@@ -24,12 +24,16 @@ def load_config(filename):
 def main():
     
     parser = argparse.ArgumentParser(description="Parse Excel and build XML.")
+    parser.add_argument(
+        '--source', '-s',
+        choices=['degiro', 'portu'],
+        help='Specify the data source')
     parser.add_argument('mode', choices=['dividend', 'stock', 'fifo'],
                         help='Specify the processing mode (dividend or stock).')
     parser.add_argument("file_path", help="Path to the Degiro Account Statement file")
     parser.add_argument("--year", "-y", type=int, help="Year for which the report is")
     parser.add_argument("--config", "-c", type=str, default="config.yaml", help="Path to the configuration file")
-    parser.add_argument("--fifo_date", "-d", type=str, default="config.yaml", help="Path to the configuration file")
+    parser.add_argument("--fifo_date", "-d", type=str, default="config.yaml", required=False, help="Path to the configuration file")
     args = parser.parse_args()
     
     # Use the selected mode
@@ -43,12 +47,26 @@ def main():
         process_fifo(args, config)
     else:
         print(f"Invalid mode: {args.mode}")
-        
+
+def get_parser(source):
+    if source == 'degiro':
+        from src.parser.degiro_parser import DegiroParser
+        return DegiroParser()
+    # elif source == 'portu':
+    #     from src.parser.portu_parser import PortuParser
+    #     return PortuParser()
+    else:
+        raise ValueError("Unsupported source.")
     
 def process_dividends(args, config):
     
+    parser = get_parser(args.source)
+    
+    degiro_data = parser.parse_dividends(args.file_path, args.year)
+    # xml_data = build_dividend_xml(degiro_data, args.year, config)
+    
     # Parse Excel
-    degiro_data = parse_degiro_account_data(args.file_path, args.year)
+    # degiro_data = parse_degiro_account_data(args.file_path, args.year)
 
     # Recalculate a column in DeGiro account data using currency data
 

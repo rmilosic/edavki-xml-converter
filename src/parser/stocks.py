@@ -5,31 +5,31 @@ from src.transformer.stocks import add_eur_column
 # Get the current working directory
 current_directory = os.getcwd()
 
-def calculate_value(row):
-    if row.iloc[8] == 'EUR':
-        return row.iloc[7]
-    else:
-        # Recalculate using another column and Column7
-        return row['AnotherColumn'] * row['Column7']
+# def calculate_value(row):
+#     if row.iloc[8] == 'EUR':
+#         return row.iloc[7]
+#     else:
+#         # Recalculate using another column and Column7
+#         return row['AnotherColumn'] * row['Column7']
     
 
-def parse_degiro_transactions_data(file_path, year):
+# def parse_degiro_transactions_data(file_path, year):
 
-    # transform columns
-    df = pd.read_csv(os.path.join(current_directory, f"data/{file_path}"))
-    df["Datum"] = pd.to_datetime(df["Datum"], dayfirst=True)
+#     # transform columns
+#     df = pd.read_csv(os.path.join(current_directory, f"data/{file_path}"))
+#     df["Datum"] = pd.to_datetime(df["Datum"], dayfirst=True)
     
-    # Convert columns at location 0 and 1 to datetime
-    df.sort_values(by="Datum", inplace=True)
+#     # Convert columns at location 0 and 1 to datetime
+#     df.sort_values(by="Datum", inplace=True)
     
-    df = add_eur_column(df)
+#     df = add_eur_column(df)
     
-    # Filter by year
-    if year:
-        df = df[df.iloc[:,0].dt.year <= year]
+#     # Filter by year
+#     if year:
+#         df = df[df.iloc[:,0].dt.year <= year]
 
     
-    return df
+#     return df
 
 def get_sold_products(df, year):
     

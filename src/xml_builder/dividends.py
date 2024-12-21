@@ -66,7 +66,7 @@ def build_dividend_xml(data, year, config):
         dividend = etree.SubElement(body, "Dividend")
         # Add logic to build XML elements based on DataFrame rows
         date = etree.SubElement(dividend, "Date")
-        date.text = row['Datum.1'].strftime("%Y-%m-%d")
+        date.text = row['Datum'].strftime("%Y-%m-%d")
         # payer_tax_num = etree.SubElement(dividend, "PayerTaxNumber")
         # PayerTaxNumber.text = row[""]
         payer_ident_num = etree.SubElement(dividend, "PayerIdentificationNumber")
