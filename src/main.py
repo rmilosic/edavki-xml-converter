@@ -3,7 +3,7 @@ import os
 import yaml
 
 # from src.parser.dividends import parse_degiro_account_data
-from src.parser.stocks import parse_degiro_transactions_data, get_sold_products, get_historical_ticker_transactions
+# from src.parser.stocks import parse_degiro_transactions_data, get_sold_products, get_historical_ticker_transactions
 # from src.parser.exchange_rate import parse_historical_currency_data
 # from src.transformer.dividends import add_eur_column
 # from src.transformer.stocks import add_fifo_data
@@ -41,8 +41,8 @@ def main():
     config = load_config(args.config)
     if args.mode == 'dividend':
         process_dividends(args, config)
-    elif args.mode == 'stock':
-        process_stocks(args, config)
+    # elif args.mode == 'stock':
+    #     process_stocks(args, config)
     elif args.mode == "fifo":
         process_fifo(args, config)
     else:
@@ -52,9 +52,9 @@ def get_parser(source):
     if source == 'degiro':
         from src.parser.degiro_parser import DegiroParser
         return DegiroParser()
-    # elif source == 'portu':
-    #     from src.parser.portu_parser import PortuParser
-    #     return PortuParser()
+    elif source == 'portu':
+        from src.parser.portu_parser import PortuParser
+        return PortuParser()
     else:
         raise ValueError("Unsupported source.")
     
@@ -73,33 +73,40 @@ def process_dividends(args, config):
     # Build XML
     xml_data = build_dividend_xml(degiro_data, args.year, config)
 
-    with open(f"degiro_dividends_doh_div_v3_{args.year}.xml", "w", encoding="utf-8") as file:
+    # file directory
+    dirpath = os.path.join(os.getcwd(), "output", str(args.source), "dividends", str(args.year))
+    if not os.path.exists(dirpath):
+        os.makedirs(dirpath)
+
+    with open(os.path.join(dirpath, f"degiro_dividends_doh_div_v3_{args.year}.xml"), "w", encoding="utf-8") as file:
         file.write(xml_data)
 
-def process_stocks(args, config):
+# def process_stocks(args, config):
     
-    degiro_data = parse_degiro_transactions_data(args.file_path, args.year)
+#     degiro_data = parse_degiro_transactions_data(args.file_path, args.year)
 
-    # get all sold tickrs within tax year
-    sold_products = get_sold_products(degiro_data, args.year
-                                      )
-    # Build XML
-    xml_data = build_stock_xml(degiro_data, sold_products, args.year, config)
+#     # get all sold tickrs within tax year
+#     sold_products = get_sold_products(degiro_data, args.year
+#                                       )
+#     # Build XML
+#     xml_data = build_stock_xml(degiro_data, sold_products, args.year, config)
 
-    with open(f"degiro_stocks_doh_kdvp_v9_{args.year}.xml", "w", encoding="utf-8") as file:
-        file.write(xml_data)
-    # for each sold tickr, build a popisni list
-    # get all buys ands sells for tax year and before
+#     with open(f"degiro_stocks_doh_kdvp_v9_{args.year}.xml", "w", encoding="utf-8") as file:
+#         file.write(xml_data)
+#     # for each sold tickr, build a popisni list
+#     # get all buys ands sells for tax year and before
     
    
     
-    return degiro_data
+#     return degiro_data
 
 
 def process_fifo(args, config):
     
     fifo_queue = deque()
     
+    source = args.source
+    year = args.year
     
     # Function to handle buying stocks
     def buy(quantity, price, date):
@@ -140,43 +147,61 @@ def process_fifo(args, config):
         profit_or_loss = total_proceeds - total_cost
         return total_cost, total_proceeds, profit_or_loss, sell_table
     # FIFO queue to hold purchased stocks
+    parser = get_parser(args.source)
     
-    degiro_data = parse_degiro_transactions_data(args.file_path, args.year)
+    degiro_data = parser.parse_transactions(args.file_path, args.year)
     
     # TODO: proces each product separately 
-    for product in degiro_data["Produkt"].drop_duplicates():
+    for isin in degiro_data["isin"].drop_duplicates():
         
-        # datum, produkt, isin, počet, price, fifo cost, proceeds, profit/loss
+        # datum, Product, isin, Count, price, fifo cost, proceeds, profit/loss
         sales_records = []
-        product_data = degiro_data[degiro_data["Produkt"] == product]
+        product_data = degiro_data[degiro_data["isin"] == isin]
         
-        sale_master_table = pd.DataFrame(columns=["product", "date_sold", "sold_qty", "sold_price", "date_bought", "bought_qty", "bought_price"])
+        sale_master_table = pd.DataFrame(columns=["isin", "date_sold", "sold_qty", "sold_price", "date_bought", "bought_qty", "bought_price"])
         
         for index, row in product_data.iterrows():
             
             
-            count = row["Počet"]
-            price = row["Cena"]
-            date = row["Datum"]
-            action = "buy" if count > 0 else "sell"
+            count = row["Count"]
+            price = row["Amount"]
+            date = row["Date"]
+            
+            try:
+                product = row["Product"]
+            except KeyError:
+                product = row["isin"]
+            
+            if source == 'degiro':
+                action = "buy" if count > 0 else "sell"
+            elif source == 'portu':
+                action = "buy" if row["Hodnota"] < 0 else "sell"
+            else:
+                raise NotImplementedError
+            
             if action == 'buy':
                 buy(count, price, date)
             elif action == 'sell':
                 total_cost, total_proceeds, profit_or_loss, sell_table = sell(abs(count), price, date)
                 
-                sell_table["product"] = product
+                sell_table["isin"] = row["isin"]
                 sale_master_table = pd.concat([sale_master_table, sell_table], axis=0, ignore_index=True)
                 
-                sales_records.append((row["Datum"], row["Produkt"], row["ISIN"], row["Počet"], row["Cena"], total_cost, total_proceeds, profit_or_loss))
+                sales_records.append((row["Date"], product, row["isin"], row["Count"], row["Amount"], total_cost, total_proceeds, profit_or_loss))
                 print(f"Sold {count} shares:")
                 print(f"  FIFO Cost: €{total_cost}")
                 print(f"  Proceeds: €{total_proceeds}")
                 print(f"  Profit/Loss: €{profit_or_loss}")
 
         
-        fifo_sales = pd.DataFrame(columns=["Datum", "Produkt", "ISIN", "Počet", "Cena", "fifo cost", "proceeds", "profit/loss"], data=sales_records)
-        fifo_sales.to_csv(f"degiro_fifo_{product}.csv", encoding='utf-8')
-        sale_master_table.to_csv(f"degiro_fifo_detail_{product}.csv", encoding='utf-8')
+        fifo_sales = pd.DataFrame(columns=["Datum", "Product", "isin", "Count", "Amount", "fifo cost", "proceeds", "profit/loss"], data=sales_records)
+        # fifo_sales.to_csv(f"{source}_fifo_{product}.csv", encoding='utf-8')
+        
+        # file directory
+        dirpath = os.path.join(os.getcwd(), "output", str(source), "stocks", str(year))
+        if not os.path.exists(dirpath):
+            os.makedirs(dirpath)
+        sale_master_table.to_csv(os.path.join(dirpath, f"{source}_fifo_detail_{product}.csv"), encoding='utf-8')
     
     
     return degiro_data

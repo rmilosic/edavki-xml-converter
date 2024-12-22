@@ -10,7 +10,7 @@ def add_eur_column(degiro_data):
     currency_data["Date"] = pd.to_datetime(currency_data["Date"])
     
     # Merge DeGiro data with currency data based on a common column (e.g., 'Date')
-    merged_data = pd.merge_asof(degiro_data, currency_data, left_on='Datum', right_on="Date")
+    merged_data = pd.merge_asof(degiro_data, currency_data, left_on='Date', right_on="Date")
 
     # Recalculate the 'Amount' column using the 'ExchangeRate'
     # merged_data['transaction_eur'] = merged_data['Unnamed: 8'] / merged_data['USD']
@@ -18,8 +18,8 @@ def add_eur_column(degiro_data):
     return merged_data
 
 def recalculate_to_eur(row):
-    if row.iloc[7] == 'EUR':
-        return row.iloc[8]
+    if row["Currency"] == 'EUR':
+        return row["Amount"]
     else:
-        # divide by currency 
-        return row.iloc[8]/row[row.iloc[7]]
+        # dynamically divide the transaction/dividend amount by exchange rate for currency based on the currency of the transaction/dividend
+        return row["Amount"]/row[row["Currency"]]

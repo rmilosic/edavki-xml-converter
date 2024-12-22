@@ -16,5 +16,23 @@ class PortuParser(BaseParser):
         pass
     
     def parse_transactions(self, file_path, year):
+        df = pd.read_csv(os.path.join(current_directory, f"data/{file_path}"),
+                         decimal=",", sep=";")
+        df["Datum"] = pd.to_datetime(df["Datum"], dayfirst=True)
         
-        pass
+        # Convert columns at location 0 and 1 to datetime
+        df.sort_values(by="Datum", inplace=True)
+        
+         # Filter by year
+        if year:
+            df = df[df.iloc[:,0].dt.year <= year]
+
+        df.rename(columns={
+            "Datum": "Date",
+            "Unnamed: 8": "Currency",
+            "Cena": "Amount",
+            "Kusy / Pozice": "Count",
+            "Symbol": "isin"
+        }, inplace=True)
+
+        return df

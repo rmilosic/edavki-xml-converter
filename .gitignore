@@ -7,3 +7,4 @@ __pycache__
 *.csv
 !data/eurofxref-hist.csv
 *.DS_Store
+output
