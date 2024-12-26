@@ -1,0 +1,22 @@
+# Backend Dockerfile (FastAPI)
+FROM python:3.10
+
+# Set working directory
+WORKDIR /app
+
+# Install dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy application files
+COPY . .
+
+# Add the src folder to PYTHONPATH
+ENV PYTHONPATH="${PYTHONPATH}:/app/src"
+
+
+# Expose FastAPI default port
+EXPOSE 8000
+
+# Use watchmedo for auto-restart on changes
+CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000", "--reload", "--workers", "1", "--reload-dir", "/app/src"]

@@ -8,3 +8,4 @@ __pycache__
 !data/eurofxref-hist.csv
 *.DS_Store
 output
+.env
