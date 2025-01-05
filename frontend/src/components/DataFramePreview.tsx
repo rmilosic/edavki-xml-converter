@@ -1,7 +1,7 @@
 import React from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 
-const DataFramePreview = ({ data , columnMapping}) => {
+const DataFramePreview = ({ data, columnMapping}) => {
   if (!data || Object.keys(data).length === 0) {
     return (
       <Card className="w-full">

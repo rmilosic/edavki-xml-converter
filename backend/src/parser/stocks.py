@@ -1,6 +1,6 @@
 import os
 import pandas as pd
-from src.transformer.stocks import add_eur_column
+from src.transformer import add_eur_column
 
 # Get the current working directory
 current_directory = os.getcwd()
