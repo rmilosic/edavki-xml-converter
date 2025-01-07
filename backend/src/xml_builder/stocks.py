@@ -142,7 +142,7 @@ def build_stock_xml(data: pd.DataFrame, year, config):
     xml_string = etree.tostring(root, xml_declaration=True, encoding='utf-8').decode('utf-8')
     
     # Print the generated XML
-    print(xml_string)
+    # print(xml_string)
 
     # Save the XML to a file
     return xml_string

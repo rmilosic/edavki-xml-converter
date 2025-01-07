@@ -23,3 +23,14 @@ def recalculate_to_eur(row):
     else:
         # dynamically divide the transaction/dividend amount by exchange rate for currency based on the currency of the transaction/dividend
         return row["Amount"]/row[row["Currency"]]
+    
+
+def get_parser(source):
+    if source == 'degiro':
+        from src.parser.degiro_parser import DegiroParser
+        return DegiroParser()
+    elif source == 'portu':
+        from src.parser.portu_parser import PortuParser
+        return PortuParser()
+    else:
+        raise ValueError("Unsupported source.")
