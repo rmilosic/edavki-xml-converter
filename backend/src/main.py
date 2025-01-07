@@ -210,6 +210,7 @@ def process_fifo(args, config):
     
     degiro_data = parser.parse_transactions(args.file_path, args.year)
     
+    overall_sales_data = pd.DataFrame(columns=["isin", "date_sold", "sold_qty", "sold_price", "date_bought", "bought_qty", "bought_price", "fifo", "fifo_sold"])
     # TODO: proces each product separately 
     for isin in degiro_data["isin"].drop_duplicates():
         
@@ -218,7 +219,7 @@ def process_fifo(args, config):
         product_data = degiro_data[degiro_data["isin"] == isin]
         product_data.sort_values("Date", ascending=True, axis=0, inplace=True)
         
-        sale_master_table = pd.DataFrame(columns=["isin", "date_sold", "sold_qty", "sold_price", "date_bought", "bought_qty", "bought_price", "fifo", "fifo_sold"])
+        sale_master_table = pd.DataFrame(columns=["date", "isin", "date_sold", "sold_qty", "sold_price", "date_bought", "bought_qty", "bought_price", "fifo", "fifo_sold"])
         
         
         fifo = 0
@@ -253,33 +254,43 @@ def process_fifo(args, config):
                 
                 if date.year == year:
                     sale_master_table = pd.concat([sale_master_table, sell_table], axis=0, ignore_index=True)
-                    sale_master_table.sort_values(["date", "fifo_sold"], axis=0, ascending=[True, False], inplace=True)
-                    sale_master_table.drop_duplicates(inplace=True, subset=["date_bought", "bought_price", "fifo"])
+                    
                     
                     # sales_records.append((row["Date"], product, row["isin"], row["Count"], row["Amount"], total_cost, total_proceeds, profit_or_loss))
                     print(f"Sold {count} shares:")
                     print(f"  FIFO Cost: €{total_cost}")
                     print(f"  Proceeds: €{total_proceeds}")
                     print(f"  Profit/Loss: €{profit_or_loss}")
-
+            
+           
+        sale_master_table.sort_values(["date", "fifo_sold"], axis=0, ascending=[True, False], inplace=True)
+        sale_master_table.drop_duplicates(inplace=True, subset=["date_bought", "bought_price", "fifo"])
+        overall_sales_data = pd.concat([overall_sales_data, sale_master_table], axis=0, ignore_index=True)
             
             
             
         # fifo_sales = pd.DataFrame(columns=["Datum", "Product", "isin", "Count", "Amount", "fifo cost", "proceeds", "profit/loss"], data=sales_records)
         # fifo_sales.to_csv(f"{source}_fifo_{product}.csv", encoding='utf-8')
+        
+        # file directory
+        dirpath = os.path.join(os.getcwd(), "output", str(source), "stocks", str(year))
+        
         if len(sale_master_table) > 0:
             
-            # file directory
-            dirpath = os.path.join(os.getcwd(), "output", str(source), "stocks", str(year))
             if not os.path.exists(dirpath):
                 os.makedirs(dirpath)
             sale_master_table.to_csv(os.path.join(dirpath, f"{source}_fifo_detail_{product}.csv"), encoding='utf-8')
-
+        
+        if len(overall_sales_data) > 0:
+            if not os.path.exists(dirpath):
+                os.makedirs(dirpath)
+            overall_sales_data.to_csv(os.path.join(dirpath, f"{source}_overall.csv"), encoding='utf-8')
+            
             # Build XML
-            # xml_data = build_stock_xml(degiro_data, sold_products, args.year, config)
+            xml_data = build_stock_xml(overall_sales_data, args.year, config)
 
-            # with open(f"degiro_stocks_doh_kdvp_v9_{args.year}.xml", "w", encoding="utf-8") as file:
-            #     file.write(xml_data)
+            with open(os.path.join(dirpath, f"degiro_stocks_doh_kdvp_v9_{args.year}.xml"), "w", encoding="utf-8") as file:
+                file.write(xml_data)
                 
     return degiro_data
 
