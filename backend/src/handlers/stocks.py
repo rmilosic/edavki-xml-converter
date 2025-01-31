@@ -37,11 +37,6 @@ def process_stocks(args, config):
         # sell table
         sell_table = pd.DataFrame(columns=["date", "date_sold", "sold_qty", "sold_price", "date_bought", "bought_qty", "bought_price", "fifo", "fifo_sold"])
         
-        # oldest_stock = fifo_queue[0] 
-        # available_qty, buy_price, buy_date, fifo_at_buy = oldest_stock
-        # sold_fifo = fifo_at_buy - sold_qty
-
-        # TODO: fix sold fifo for first sold stock and in general
         # while quantity of sold stock is greater than 0
         while quantity > 0:
             # get oldest bought stock
@@ -107,8 +102,8 @@ def process_stocks(args, config):
             "date_bought": pd.NA,
             "bought_qty": pd.NA,
             "bought_price": pd.NA,
-            "fifo": round(sold_fifo, 4),
-            "fifo_sold": round(sold_fifo, 4)
+            "fifo": round(fifo, 4),
+            "fifo_sold": round(fifo, 4)
         }
            
         # 1% of total cost
