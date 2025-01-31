@@ -18,16 +18,15 @@ def process_stocks(args, config):
     year = args.year
     
     # Function to handle buying stocks
-    def buy(quantity, price, date, isin):
+    def buy(quantity, price, date):
         nonlocal fifo
         fifo = fifo + quantity
         fifo_queue.append((quantity, price, date, fifo))
         # print("fifo", fifo)
 
     # Function to handle selling stocks and calculate profit/loss
-    def sell(quantity, sale_price, sell_date, isin):
+    def sell(quantity, sale_price, sell_date):
         nonlocal fifo
-        sold_qty = quantity
         total_cost = 0
         # total_proceeds is equal to quantity and sale price
         total_proceeds = quantity * sale_price
@@ -37,11 +36,6 @@ def process_stocks(args, config):
         # sell table
         sell_table = pd.DataFrame(columns=["date", "date_sold", "sold_qty", "sold_price", "date_bought", "bought_qty", "bought_price", "fifo", "fifo_sold"])
         
-        # oldest_stock = fifo_queue[0] 
-        # available_qty, buy_price, buy_date, fifo_at_buy = oldest_stock
-        # sold_fifo = fifo_at_buy - sold_qty
-
-        # TODO: fix sold fifo for first sold stock and in general
         # while quantity of sold stock is greater than 0
         while quantity > 0:
             # get oldest bought stock
@@ -72,7 +66,18 @@ def process_stocks(args, config):
                 # decrease fifo by available quantity of oldest stock
                 fifo = fifo - available_qty
                
-                
+                # add a sell record
+                sell_table.loc[len(sell_table)] = {
+                "date": sell_date,
+                "date_sold": sell_date,
+                "sold_qty": round(available_qty, 4),
+                "sold_price": round(sale_price, 4),
+                "date_bought": pd.NA,
+                "bought_qty": pd.NA,
+                "bought_price": pd.NA,
+                "fifo": round(fifo, 4),
+                "fifo_sold": round(fifo, 4)
+            }
             # if sold qty is less or equal to available quantity of oldest stock
             else:
                 total_cost += quantity * buy_price
@@ -82,35 +87,22 @@ def process_stocks(args, config):
                 # decrease fifo by sold quantity
                 fifo = fifo - quantity
                 
-                # # add a sell record
-                # sell_table.loc[len(sell_table)] = {
-                # "date": sell_date,
-                # "date_sold": sell_date,
-                # "sold_qty": round(quantity, 4),
-                # "sold_price": round(sale_price, 4),
-                # "date_bought": pd.NA,
-                # "bought_qty": pd.NA,
-                # "bought_price": pd.NA,
-                # "fifo": round(fifo, 4),
-                # "fifo_sold": round(fifo, 4)
-                # }
+                # add a sell record
+                sell_table.loc[len(sell_table)] = {
+                "date": sell_date,
+                "date_sold": sell_date,
+                "sold_qty": round(quantity, 4),
+                "sold_price": round(sale_price, 4),
+                "date_bought": pd.NA,
+                "bought_qty": pd.NA,
+                "bought_price": pd.NA,
+                "fifo": round(fifo, 4),
+                "fifo_sold": round(fifo, 4)
+                }
                 
                 # remaining quantity is 0
                 quantity = 0
-        
-         # add a sell record
-        sell_table.loc[len(sell_table)] = {
-            "date": sell_date,
-            "date_sold": sell_date,
-            "sold_qty": round(sold_qty, 4),
-            "sold_price": round(sale_price, 4),
-            "date_bought": pd.NA,
-            "bought_qty": pd.NA,
-            "bought_price": pd.NA,
-            "fifo": round(sold_fifo, 4),
-            "fifo_sold": round(sold_fifo, 4)
-        }
-           
+            
         # 1% of total cost
         total_cost_1_perc = 0.01 * total_cost
             
@@ -176,11 +168,11 @@ def process_stocks(args, config):
                 raise NotImplementedError
             
             if action == 'buy':
-                buy(count, price, date, product)
+                buy(count, price, date)
             elif action == 'sell':
                 
                     
-                total_cost, total_proceeds, profit_or_loss, profit_decreased_by_normed_costs, sell_table = sell(abs(count), price, date, product)
+                total_cost, total_proceeds, profit_or_loss, profit_decreased_by_normed_costs, sell_table = sell(abs(count), price, date)
                 
                     
                 sell_table["isin"] = row["isin"]
@@ -203,9 +195,7 @@ def process_stocks(args, config):
                     # print(f"Sold {count} shares of {product}:")
                     # print(f"  FIFO Cost: €{total_cost}")
                     # print(f"  Proceeds: €{total_proceeds}")
-        # IMPORTAN: empty fifo_deque
-        fifo_queue.clear()
-         
+                    
         # sale_master_table.sort_values(["fifo_sold", "date"], axis=0, ascending=[False, True], inplace=True)
         sale_master_table.sort_values([ "date_bought", "date", "fifo_sold"], axis=0, ascending=[True, True, False], inplace=True)
         sale_master_table.drop_duplicates(inplace=True, subset=["date_bought", "bought_price", "fifo"])
